@@ -19,8 +19,8 @@
        :cljs [replacement.protocol.cljs-fn-specs :as specs])
     [replacement.protocol.patched-core-specs :as core-specs]
     [replacement.protocol.data :as data-specs]
-    [replacement.protocol.state :as state]
-    [replacement.protocol.text-parsing :as text-parsing]))
+    [replacement.import.state :as state]
+    [replacement.import.text-parsing :as text-parsing]))
 
 (defn- unformed-arity-data
   [params+body]

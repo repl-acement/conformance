@@ -1,8 +1,8 @@
 (ns replacement.protocol.forms.defn-test
   (:require [clojure.test :refer [deftest is testing]]
             [replacement.protocol.forms.defn :as defn]
-            [replacement.import.import :as import]
-            [replacement.protocol.text-parsing :as text-parsing]))
+            [replacement.import.persist-state :as persist-state]
+            [replacement.import.text-parsing :as text-parsing]))
 
 (def body-updates
   ["(defn hello-world \"Welcome to repl-acement\" [] \"Hello world\")"
@@ -52,10 +52,10 @@
     ["(def hello-world \"Hello ClojureD\")"
      "(defn hello-world [] \"Hello ClojureD\")"])
 
-(def hello-db (import/add+index-ns {} (->> text-parsing/hello-sample
-                                           (text-parsing/text->edn-forms)
-                                           (text-parsing/whole-ns->spec-form-data)
-                                           (import/add-reference-data))))
+(def hello-db (persist-state/add+index-ns {} (->> text-parsing/hello-sample
+                                                  (text-parsing/text->edn-forms)
+                                                  (text-parsing/whole-ns->spec-form-data)
+                                                  (persist-state/add-reference-data))))
 
 (defn ->updated-db
   [updates]

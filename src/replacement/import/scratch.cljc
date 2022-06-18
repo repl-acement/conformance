@@ -1,4 +1,4 @@
-(ns replacement.protocol.diffs)
+(ns replacement.import.scratch)
 
 
 (comment

@@ -1,4 +1,4 @@
-(ns replacement.protocol.text-parsing
+(ns replacement.import.text-parsing
   #?(:cljs (:require [replacement.protocol.data :as spec-data]
                      [cljs.spec.alpha :as s]
                      [cljs.tools.reader.reader-types :as readers]

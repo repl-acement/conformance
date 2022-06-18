@@ -1,7 +1,7 @@
 (ns replacement.protocol.events-test
   (:require [clojure.test :refer [deftest is testing]]
-            [replacement.import.import :as import]
-            [replacement.protocol.text-parsing :as text-parsing]))
+            [replacement.import.persist-state :as persist-state]
+            [replacement.import.text-parsing :as text-parsing]))
 
 (def hello-sample "(ns replacement.greet \"Hello World.\"
   (:require [cljs.spec.alpha :as s]
@@ -36,7 +36,7 @@
         app-form-id (get form-name->id form-name)
         id-digest (name app-form-id)
         app-form-name (get form-id->name app-form-id)
-        [the-ns-name the-form-name form-digest] (import/destruct-form-name app-form-name)]
+        [the-ns-name the-form-name form-digest] (persist-state/destruct-form-name app-form-name)]
     (and (= name-form-name the-form-name)
          (= id-digest form-digest)
          (= an-ns-name the-ns-name))))
@@ -45,34 +45,34 @@
   (let [hello-edn (->> hello-sample
                        (text-parsing/text->edn-forms)
                        (text-parsing/whole-ns->spec-form-data)
-                       (import/add-reference-data))
+                       (persist-state/add-reference-data))
         goodbye-edn (->> goodbye-sample
                          (text-parsing/text->edn-forms)
                          (text-parsing/whole-ns->spec-form-data)
-                         (import/add-reference-data))]
+                         (persist-state/add-reference-data))]
     (testing "That we can add an ns to the database"
-      (let [hello-db (import/add+index-ns {} hello-edn)]
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)]
         (is hello-db)))
     (testing "That we can add > 1 ns to the database"
-      (let [hello-db (import/add+index-ns {} hello-edn)
-            goodbye-db (import/add+index-ns hello-db goodbye-edn)]
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)
+            goodbye-db (persist-state/add+index-ns hello-db goodbye-edn)]
         (is (and hello-db goodbye-db))
         (is (not= hello-db goodbye-db))))
     (testing "That adding nses is idempotent"
-      (let [hello-db (import/add+index-ns {} hello-edn)
-            goodbye-db (import/add+index-ns hello-db goodbye-edn)
-            same-db (import/add+index-ns goodbye-db hello-edn)
-            same2-db (import/add+index-ns goodbye-db goodbye-edn)]
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)
+            goodbye-db (persist-state/add+index-ns hello-db goodbye-edn)
+            same-db (persist-state/add+index-ns goodbye-db hello-edn)
+            same2-db (persist-state/add+index-ns goodbye-db goodbye-edn)]
         (is (and hello-db goodbye-db))
         (is (not= hello-db goodbye-db))
         (is (= same-db goodbye-db))
         (is (= same2-db goodbye-db))))
     (testing "That the names, ids and digests are indexed and in sync"
-      (let [hello-db (import/add+index-ns {} hello-edn)
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)
             the-ns-name (-> (:ns-name->ns-id hello-db) keys first)]
         (is (every? true? (map #(test-form-name<->form-id-in-sync hello-db the-ns-name %) (keys (:form-name->id hello-db)))))))
     (testing "All the forms are in the ns-name->forms list"
-      (let [hello-db (import/add+index-ns {} hello-edn)
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)
             ns-name->forms-set (-> (:ns-name->forms hello-db) vals first set)
             form-id-set (-> (:form-id->name hello-db) keys set)]
         (is (= ns-name->forms-set form-id-set))))))

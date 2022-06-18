@@ -1,5 +1,5 @@
-(ns replacement.protocol.state
-  (:require [replacement.protocol.hashing :as hashing]
+(ns replacement.import.state
+  (:require [replacement.import.hashing :as hashing]
             #?(:cljs [promesa.core :as p])))
 
 (defn record-state-change

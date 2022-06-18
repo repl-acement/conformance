@@ -1,8 +1,8 @@
-(ns replacement.import.import
+(ns replacement.import.persist-state
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [replacement.protocol.data :as data]
-            [replacement.protocol.hashing :as hashing])
+            [replacement.import.hashing :as hashing])
   #?(:clj (:import (java.util UUID))))
 
 (comment
