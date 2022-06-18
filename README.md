@@ -1,21 +1,21 @@
 # conformance
 Import and persist conformed data to replacement.
 
-# TODO List
+## TODO List
 
-## Parsing / ingestion
+### Parsing / ingestion
 - Design fundamental units of data
-- [ ] def
-- [ ] defn
-- [ ] defmacro
+  - [ ] def
+  - [ ] defn
+  - [ ] defmacro
 - Parse bodies to obtain calls to global vars and local references
   - Core binding types
-  - [ ] let
-  - [ ] for
+    - [ ] let
+    - [ ] for
   - Expressions
-  - [ ] s-exp
+    - [ ] s-exp
 
-## Database
+### Database
 - [ ] Save data units to XTDB
 - [ ] Query data to demonstrate state history backwards from a given point in time (ancestors)
 - [ ] Query data to demonstrate state history forwards from a given point in time (descendants)
