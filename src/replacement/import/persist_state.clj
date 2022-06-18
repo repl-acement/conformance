@@ -2,8 +2,11 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [replacement.protocol.data :as data]
+            [replacement.import.db :as db]
             [replacement.import.hashing :as hashing])
-  #?(:clj (:import (java.util UUID))))
+  (:import (java.util UUID)))
+
+(set! *warn-on-reflection* true)
 
 (comment
   "Check all calls"
@@ -11,8 +14,7 @@
 
 (defn destruct-form-id
   [form-id]
-  (let [uuid #?(:clj (UUID/fromString (namespace form-id))
-                :cljs (uuid (namespace form-id)))
+  (let [uuid (UUID/fromString (namespace form-id))
         digest (name form-id)]
     [uuid digest]))
 
@@ -251,39 +253,6 @@
 ;           :id->name {uuid  {:name the-ns-name :digest "123"}}}
 ;
 ;------- ^^^ the way forward
-
-
-;; TODO persistent version ie not using random-uuid.... ^^^ use that
-(defn index-ns-forms
-  "Produce an ID for each form and have a map with that ID for the form data.
-  Produce a vector of IDs to ensure order is maintained. The first entry can be
-  relied upon as the ns declaration"
-  [db forms]
-  {:pre [(seq forms)]}
-  (let [[ns-id db'] (add-ns db (first forms))
-        ns+forms (reduce (fn [result {:keys [::data/var-name] :as form}]
-                           (let [form-id (random-uuid)]
-                             (-> result
-                                 (update-in [:forms :forms-index] (comp vec conj) form-id)
-                                 (update-in [:forms :form-id->form] merge (hash-map form-id form))
-                                 (update-in [:forms :form-id->name] merge (hash-map form-id var-name))
-                                 (update-in [:forms :form-name->id] merge (hash-map var-name form-id)))))
-                         (get db' ns-id) (rest forms))]
-    (assoc db' ns-id ns+forms)
-
-    ;; replace vvv with ^^^
-    ;; check first is-ns?
-    (let [result (reduce (fn [[_ns-index index kvs] form]
-                           (let [uuid (random-uuid)
-                                 idx (vec (conj index uuid))
-                                 ns-map (hash-map (first idx) idx)
-                                 kv-map (merge kvs (hash-map uuid form))]
-                             [ns-map idx kv-map]))
-                         [] forms)]
-
-      (tap> [:x forms])
-      (tap> [:y result])
-      result)))
 
 
 ;; TODO lookup ns versions via deps.edn classpath data

@@ -1,4 +1,4 @@
-(ns replacement.protocol.events-test
+(ns replacement.protocol.persist-test
   (:require [clojure.test :refer [deftest is testing]]
             [replacement.import.persist-state :as persist-state]
             [replacement.import.text-parsing :as text-parsing]))
