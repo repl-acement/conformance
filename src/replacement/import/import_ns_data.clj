@@ -1,13 +1,12 @@
 (ns replacement.import.import-ns-data
   (:require
     [clojure.spec.alpha :as s]
-    [promesa.core :as p]
     [replacement.import.db :as xt-db]
     [replacement.import.classpath :as cp]
     [replacement.import.forms :as forms]
     [replacement.import.hashing :as hashing]
     [replacement.import.ns :as ns-data-handling]
-    [replacement.import.persist-state :refer [store-form]]
+    [replacement.import.persist-state :refer [form-tx-data]]
     [replacement.import.text2edn :as text2edn]
     [replacement.protocol.data :as data]
     [xtdb.api :as xt-api]))
@@ -59,7 +58,7 @@
 (defn import-ns
   [db-node ns-forms]
   (let [tx-data (reduce (fn [tx-datas form]
-                          (conj tx-datas [::xt-api/put (store-form form)]))
+                          (conj tx-datas [::xt-api/put (form-tx-data form)]))
                         [] ns-forms)
         ns-form (first ns-forms)
         form-ids (map #(-> % last :xt/id) tx-data)
@@ -69,17 +68,44 @@
     (xt-api/submit-tx db-node ns-tx-data)
     ns-id))
 
-(defn import-ns-forms
+(defn import-ns-tx-data
+  [ns-forms]
+  (let [tx-data (reduce (fn [tx-datas form]
+                          (conj tx-datas (form-tx-data form)))
+                        [] ns-forms)
+        form-ids (map #(-> % last :xt/id) tx-data)
+        ns-id (hashing/digest form-ids)]
+    (conj tx-data {:xt/id   ns-id
+                   :ns/name (-> ns-forms first ::data/var-name name)})))
+
+
+(defn import-ns-form-tx-data
   [form-text]
-  (time (let [forms (-> form-text
-                        (text2edn/text->edn-forms)
-                        (text2edn/whole-ns->spec-form-data)
-                        (add-reference-data))
-              ns-form (first forms)
-              required-libs (-> (-> ns-form :conformed last)
-                                (ns-data-handling/split-ns)
-                                (ns-data-handling/ns-required-libs))]
-          (println :ns-id (import-ns xt-db/xtdb-node forms))
-          (->> required-libs
-               (map cp/read-ns-form)
-               (map import-ns-forms)))))
+  (let [forms (-> form-text
+                  (text2edn/text->edn-forms)
+                  (text2edn/whole-ns->spec-form-data)
+                  (add-reference-data))
+        ns-form (first forms)
+        required-libs (-> ns-form :conformed last
+                          (ns-data-handling/split-ns)
+                          (ns-data-handling/ns-required-libs))]
+    (concat (import-ns-tx-data forms)
+            ;; recurse over the required libs for this ns
+            (flatten (some->> required-libs
+                              (pmap cp/read-ns-form)
+                              (pmap import-ns-form-tx-data))))))
+
+(defn import-new-ns
+  [db-node form-text]
+  (let [tx-data (import-ns-form-tx-data form-text)
+        xt-tx-data (map (fn [tx]
+                          [::xt-api/put tx]) tx-data)]
+    (xt-api/submit-tx db-node xt-tx-data)))
+
+(comment
+
+  (time (import-new-ns xt-db/xtdb-node text2edn/hello-sample))
+  ;"Elapsed time: 115.144397 msecs"
+  ;=> #:xtdb.api{:tx-id 3182, :tx-time #inst"2022-06-19T21:57:22.972-00:00"}
+
+  )

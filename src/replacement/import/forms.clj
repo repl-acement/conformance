@@ -39,8 +39,8 @@
 (defn unsupported-reference-data
   [ns-name data]
   {::data/ns-name   ns-name
-   ::data/var-name  :unsupported
-   ::data/type      :unsupported
+   ::data/var-name  'unsupported
+   ::data/type      'unsupported
    ::data/form-data data})
 
 ;; TODO re-implement as a multimethod

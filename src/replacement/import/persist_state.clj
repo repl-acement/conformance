@@ -11,11 +11,12 @@
   "Check all calls"
   (stest/instrument))
 
-(defn store-form
-  "Save the form using the db-node using the digest of its conformed data as an ID"
+(defn form-tx-data
+  "Produce tx-data of the form plus the digest of the ns-name and its conformed data as an ID
+  and its namespace qualified form name"
   [{::data/keys [ns-name var-name] :as form-data}]
   (let [qualified-form-name (str (name ns-name) "/" (name var-name))
-        id (hashing/digest [:ns-name ns-name (:conformed form-data)])]
+        id (hashing/digest [ns-name (:conformed form-data)])]
     (merge form-data {:xt/id     id
                       :form-name qualified-form-name})))
 
