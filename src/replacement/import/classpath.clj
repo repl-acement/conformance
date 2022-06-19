@@ -51,23 +51,14 @@
     (read-stream* rdr read-opts)))
 
 (defn read-jarfile-entry
-  ([jarfile entry-name]
-   (read-jarfile-entry jarfile entry-name nil))
-  ([^JarFile jarfile ^String entry-name platform]
-   {:text nil}
-   #_(let [{:keys [read-opts]} (or platform ns-find/clj)
-           text (->> (.getEntry jarfile entry-name)
-                     (.getInputStream jarfile)
-                     (slurp))]
-       {:text text})))
+  [^JarFile jarfile ^String entry-name]
+  (->> (.getEntry jarfile entry-name)
+       (.getInputStream jarfile)
+       (slurp)))
 
 (defn read-dir-entry
-  ([file]
-   (read-dir-entry file nil))
-  ([^File file platform]
-   {:text nil}
-   #_(let [text (slurp file)]
-       {:text text})))
+  [^File file]
+  (slurp file))
 
 (defn jar+ns-decls
   [jarfile]
@@ -76,17 +67,13 @@
     (fn [ns-decls source-location]
       (let [decl-ns (not-empty (ns-find/read-ns-decl-from-jarfile-entry jarfile source-location))
             name-ns (and decl-ns (ns-parse/name-from-ns-decl decl-ns))
-            text+forms (and name-ns (binding [*ns* name-ns]
-                                      (read-jarfile-entry jarfile source-location)))
             coords {:source-location source-location
                     :source-type     :jar-entry
                     :jar-file        jarfile
-                    :decl-ns         decl-ns
                     :name-ns         name-ns}]
         (cond-> ns-decls
-                (and decl-ns name-ns) (assoc name-ns (merge coords text+forms)
-                                             source-location {:decl-ns     decl-ns
-                                                              :source-type :jar-entry
+                (and decl-ns name-ns) (assoc name-ns (merge coords)
+                                             source-location {:source-type :jar-entry
                                                               :name-ns     name-ns}))))
     {} (ns-find/sources-in-jar jarfile)))
 
@@ -108,17 +95,13 @@
     (fn [ns-decls source-location]
       (let [decl-ns (not-empty (ns-file/read-file-ns-decl source-location))
             name-ns (and decl-ns (ns-parse/name-from-ns-decl decl-ns))
-            text+forms (and name-ns (binding [*ns* name-ns]
-                                      (read-dir-entry source-location)))
             coords {:source-location source-location
                     :source-type     :file
                     :dir             dir
-                    :decl-ns         decl-ns
                     :name-ns         name-ns}]
         (cond-> ns-decls
-                decl-ns (assoc name-ns (merge coords text+forms)
-                               source-location {:decl-ns     decl-ns
-                                                :source-type :file
+                decl-ns (assoc name-ns (merge coords)
+                               source-location {:source-type :file
                                                 :name-ns     name-ns}))))
     {} (ns-find/find-sources-in-dir dir)))
 
@@ -130,18 +113,18 @@
                       decls (assoc dir decls))))
           {} dirs))
 
-(defonce classpath-data
+(def classpath-data
   (time (let [cp (classpath/classpath)
               cp-jars (filter classpath/jar-file? cp)
               cp-dirs (filter #(-> (.isDirectory ^File %)) cp)]
           (merge (jar-data cp-jars)
                  (dir-data cp-dirs)))))
 
-(defn read-form
-  ([form-name]
-   (read-form form-name classpath-data))
-  ([form-name cp-data]
-   (let [cp-entry (get cp-data form-name)
+(defn read-ns-form
+  ([ns-form-name]
+   (read-ns-form ns-form-name classpath-data))
+  ([ns-form-name cp-data]
+   (let [cp-entry (get cp-data ns-form-name)
          {:keys [source-type source-location]} cp-entry]
      (if (= :jar-entry source-type)
        (read-jarfile-entry (:jar-file cp-entry) source-location)

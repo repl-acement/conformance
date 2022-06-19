@@ -13,14 +13,11 @@
 
 (defn store-form
   "Save the form using the db-node using the digest of its conformed data as an ID"
-  [db-node {::data/keys [ns-name var-name] :as form-data}]
+  [{::data/keys [ns-name var-name] :as form-data}]
   (let [qualified-form-name (str (name ns-name) "/" (name var-name))
-        id (hashing/digest (:conformed form-data))
-        tx-data (merge form-data {:xt/id     id
-                                  :form-name qualified-form-name})]
-    (tap> [:tx-data tx-data])
-    (xt-api/submit-tx db-node [[::xt-api/put tx-data]])
-    id))
+        id (hashing/digest [:ns-name ns-name (:conformed form-data)])]
+    (merge form-data {:xt/id     id
+                      :form-name qualified-form-name})))
 
 ; TODO
 ; - add a project which contains

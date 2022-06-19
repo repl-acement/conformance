@@ -1,6 +1,7 @@
 (ns replacement.import.import-ns-data
   (:require
     [clojure.spec.alpha :as s]
+    [promesa.core :as p]
     [replacement.import.db :as xt-db]
     [replacement.import.classpath :as cp]
     [replacement.import.forms :as forms]
@@ -49,34 +50,36 @@
                    (ffirst))))))
 
 (defn update-ns-id
-  "Saves the name of the form to the db-node using the digest of the form-ids as an ID."
-  [db-node {::data/keys [var-name]} form-ids]
+  "Creates tx-data using the digest of the form-ids as an ID."
+  [{::data/keys [var-name]} form-ids]
   (let [id (hashing/digest form-ids)]
-    (xt-api/submit-tx db-node [[::xt-api/put {:xt/id   id
-                                              :ns/name (name var-name)}]])
-    id))
+    [::xt-api/put {:xt/id   id
+                   :ns/name (name var-name)}]))
 
 (defn import-ns
   [db-node ns-forms]
-  (let [form-ids (map #(store-form db-node %) ns-forms)
+  (let [tx-data (reduce (fn [tx-datas form]
+                          (conj tx-datas [::xt-api/put (store-form form)]))
+                        [] ns-forms)
         ns-form (first ns-forms)
-        ns-id (update-ns-id db-node ns-form form-ids)]
+        form-ids (map #(-> % last :xt/id) tx-data)
+        ns-id-tx-data (update-ns-id ns-form form-ids)
+        ns-id (-> ns-id-tx-data last :xt/id)
+        ns-tx-data (conj tx-data ns-id-tx-data)]
+    (xt-api/submit-tx db-node ns-tx-data)
     ns-id))
 
 (defn import-ns-forms
-  [ns-edn-forms]
-  (let [forms (->> ns-edn-forms
-                   (text2edn/whole-ns->spec-form-data)
-                   (add-reference-data))
-        ns-form (first forms)
-        required-libs (-> (-> ns-form :conformed last)
-                          (ns-data-handling/split-ns)
-                          (ns-data-handling/ns-required-libs))]
-    (import-ns xt-db/xtdb-node forms)
-    required-libs))
-
-(defn import-ns-form-text
   [form-text]
-  (-> form-text
-      (text2edn/text->edn-forms )
-      (import-ns-forms)))
+  (time (let [forms (-> form-text
+                        (text2edn/text->edn-forms)
+                        (text2edn/whole-ns->spec-form-data)
+                        (add-reference-data))
+              ns-form (first forms)
+              required-libs (-> (-> ns-form :conformed last)
+                                (ns-data-handling/split-ns)
+                                (ns-data-handling/ns-required-libs))]
+          (println :ns-id (import-ns xt-db/xtdb-node forms))
+          (->> required-libs
+               (map cp/read-ns-form)
+               (map import-ns-forms)))))

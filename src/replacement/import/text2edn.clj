@@ -15,6 +15,7 @@
   "Produce a sequentially ordered collection of edn forms, read from the given text.
   Throws on reader errors."
   [s]
+  (tap> s)
   (let [EOF    (Object.)
         reader (LineNumberingPushbackReader. (StringReader. s))]
     (reduce (fn [forms [form _]]
@@ -79,8 +80,7 @@
 (def hello-sample "(ns replacement.greet
 \"Hello World.\"
   (:require \n
-    [cljs.spec.alpha :as s]
-    [zprint.core :as zp :refer [zprint-file-str]]))
+    [clojure.spec.alpha :as s]))
 
 (def app \"repl-acement\")
 
@@ -102,8 +102,7 @@
 (def goodbye-sample "(ns replacement.goodbye
 \"Goodbye Cruel World.\"
   (:require \n
-    [cljs.spec.alpha :as s]
-    [zprint.core :as zp :refer [zprint-file-str]]))
+    [clojure.spec.alpha :as s]))
 
 (def app \"repl-acement\")
 
