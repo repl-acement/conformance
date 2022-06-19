@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [replacement.protocol.forms.defn :as defn]
             [replacement.import.persist-state :as persist-state]
-            [replacement.import.text-parsing :as text-parsing]))
+            [replacement.import.text2edn :as text-parsing]))
 
 (def body-updates
   ["(defn hello-world \"Welcome to repl-acement\" [] \"Hello world\")"

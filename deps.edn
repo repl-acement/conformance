@@ -5,10 +5,10 @@
            org.slf4j/slf4j-simple      {:mvn/version "1.7.30"}
            commons-codec/commons-codec {:mvn/version "1.15"}
            com.xtdb/xtdb-core          {:mvn/version "1.21.0"}
-           com.xtdb/xtdb-rocksdb       {:mvn/version "1.21.0"}}
+           com.xtdb/xtdb-rocksdb       {:mvn/version "1.21.0"}
+           funcool/promesa             {:mvn/version "8.0.446"}}
 
- :aliases {:cljs     {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.844"}
-                                   funcool/promesa           {:mvn/version "8.0.446"}}}
+ :aliases {:cljs     {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.844"}}}
 
            :clj-test {:extra-paths ["test"]
                       :extra-deps  {io.github.cognitect-labs/test-runner

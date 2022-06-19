@@ -1,7 +1,10 @@
 (ns replacement.protocol.persist-test
   (:require [clojure.test :refer [deftest is testing]]
+            [replacement.import.db :as xt-db]
             [replacement.import.persist-state :as persist-state]
-            [replacement.import.text-parsing :as text-parsing]))
+            [replacement.import.text2edn :as text-parsing]
+
+            [xtdb.api :as xt-api]))
 
 (def hello-sample "(ns replacement.greet \"Hello World.\"
   (:require [cljs.spec.alpha :as s]
@@ -40,6 +43,20 @@
     (and (= name-form-name the-form-name)
          (= id-digest form-digest)
          (= an-ns-name the-ns-name))))
+
+
+(deftest adding-ns-to-xtdb
+  (let [hello-edn (->> hello-sample
+                       (text-parsing/text->edn-forms)
+                       (text-parsing/whole-ns->spec-form-data)
+                       (persist-state/add-reference-data))
+        goodbye-edn (->> goodbye-sample
+                         (text-parsing/text->edn-forms)
+                         (text-parsing/whole-ns->spec-form-data)
+                         (persist-state/add-reference-data))]
+    (testing "That we can add an ns to the database"
+      (let [hello-db (persist-state/add+index-ns {} hello-edn)]
+        (is hello-db)))))
 
 (deftest adding-ns-tests
   (let [hello-edn (->> hello-sample

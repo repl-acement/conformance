@@ -41,6 +41,8 @@ graph TD
     H -->|Text| C;
 ```
 
+**RE**ad **C**onform **U**nform **P**rint aka the RECUPeration workflow
+
 If the text source can listen, it will be given back the same text as input with the assurance that it conformed and was persisted.
 
 # Testing

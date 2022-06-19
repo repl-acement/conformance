@@ -1,12 +1,8 @@
-(ns replacement.import.text-parsing
-  #?(:cljs (:require [replacement.protocol.data :as spec-data]
-                     [cljs.spec.alpha :as s]
-                     [cljs.tools.reader.reader-types :as readers]
-                     [cljs.tools.reader :as reader])
-     :clj  (:require [replacement.protocol.data :as spec-data]
-                     [clojure.spec.alpha :as s]))
-  #?(:clj (:import (clojure.lang LineNumberingPushbackReader)
-                   (java.io StringReader))))
+(ns replacement.import.text2edn
+  (:require [clojure.spec.alpha :as s]
+            [replacement.protocol.data :as spec-data])
+  (:import (clojure.lang LineNumberingPushbackReader)
+           (java.io StringReader)))
 
 (defmacro with-read-known
   "Evaluates body with *read-eval* set to a \"known\" value,
@@ -15,27 +11,17 @@
   `(binding [*read-eval* (if (= :unknown *read-eval*) true *read-eval*)]
      ~@body))
 
-(defn- push-back-reader
-  [s]
-  #?(:clj  (LineNumberingPushbackReader. (StringReader. s))
-     :cljs (readers/source-logging-push-back-reader s)))
-
-(defn string-reader
-  [reader EOF]
-  #?(:clj  (read+string {:eof EOF :read-cond :allow} reader)
-     :cljs (reader/read+string {:eof EOF :read-cond :allow} reader)))
-
 (defn text->edn-forms
   "Produce a sequentially ordered collection of edn forms, read from the given text.
   Throws on reader errors."
   [s]
-  (let [EOF :EOF
-        reader (push-back-reader s)]
+  (let [EOF    (Object.)
+        reader (LineNumberingPushbackReader. (StringReader. s))]
     (reduce (fn [forms [form _]]
-              (if (= form EOF)
+              (if (identical? form EOF)
                 (reduced forms)
                 (conj forms form)))
-            [] (repeatedly #(with-read-known (string-reader reader EOF))))))
+            [] (repeatedly #(with-read-known (read+string reader false EOF))))))
 
 (defn form->spec-formed
   "Obtain the conformed and unformed versions of the given form or explain-data for its non-conformance."
