@@ -8,7 +8,7 @@
   "Evaluates body with *read-eval* set to a \"known\" value,
    i.e. substituting true for :unknown if necessary."
   [& body]
-  `(binding [*read-eval* (if (= :unknown *read-eval*) true *read-eval*)]
+  `(binding [*read-eval* false #_(if (= :unknown *read-eval*) true *read-eval*)]
      ~@body))
 
 (defn text->edn-forms
@@ -87,7 +87,9 @@
 (defn hello-world
   \"Welcome to repl-acement\"
   []
-  \"Hello world\")
+  (let [a \"hello\"
+        b \"world\"])
+  (str a \" \" b))
 
 (defn greeting
   \"Have more interesting ways to greet\"
@@ -96,7 +98,7 @@
   (greeting \"you\"))
   ([name]
   {:pre [(string? name)]}
-  (str \"Hello\" name))
+  (str \"Hello\" name (hello-world)))
   {:multi-arity-meta :valid-but-rarely-used})")
 
 (def goodbye-sample "(ns replacement.goodbye
