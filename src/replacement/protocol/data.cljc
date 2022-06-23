@@ -21,6 +21,10 @@
          #(or (= 'defn %)
               (= 'defn- %))))
 
+(s/def ::defmacro-sym
+  (s/and symbol?
+         #(= 'defmacro %)))
+
 (s/def ::ns-sym
   (s/and symbol?
          #(= 'ns %)))
@@ -36,6 +40,7 @@
   (s/or :ns ::ns-sym
         :def ::def-sym
         :defn ::defn-sym
+        :defmacro :defmacro-sym
         :other symbol?))
 
 (s/def ::ns-form
@@ -45,20 +50,26 @@
 
 (s/def ::defn-form
   (s/cat
-    :defn-type ::defn-sym
-    :defn-args ::core-specs/defn-args))
+   :defn-type ::defn-sym
+   :defn-args ::core-specs/defn-args))
+
+(s/def ::defmacro-form
+  (s/cat
+   :defn-type ::defmacro-sym
+   :defn-args ::core-specs/defn-args))
 
 (s/def ::def-form
   (s/cat
-    :def ::def-sym
-    :var-name symbol?
-    :docstring (s/? string?)
-    :init-expr (s/+ any?)))
+   :def ::def-sym
+   :var-name symbol?
+   :docstring (s/? string?)
+   :init-expr (s/+ any?)))
 
 (s/def ::form
   (s/or :ns ::ns-form
         :def ::def-form
         :defn ::defn-form
+        :defmacro ::defmacro-form
         :expr list?))
 
 (s/def ::text ::minimal-string)
@@ -70,12 +81,3 @@
 (s/def ::form-data
   (s/keys :req-un [::text ::conformed ::unformed]
           :opt-un [::explain]))
-
-
-
-
-
-
-
-
-
