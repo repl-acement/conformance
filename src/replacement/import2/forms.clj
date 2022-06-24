@@ -9,31 +9,39 @@
         missing-dependencies (atom #{})
         register (fn [x]
                    (let [var-ns (or (some-> (namespace x) symbol)
+                                    (some-> (resolve x) meta :ns str symbol)
                                     current-ns-name)]
                      (if (get-in registry [var-ns :vars (-> x name symbol)])
                        (swap! dependencies conj x)
-                       (swap! missing-dependencies conj x))))]
-    (walk/prewalk (fn [outer-node]
-                    (when (and (map? outer-node)
-                               (:body outer-node))
-                      (let [local-symbols (atom #{})]
-                        (walk/prewalk
-                         (fn [node]
-                           (when (and (vector? node)
-                                      (= :local-symbol (first node)))
-                             (swap! local-symbols conj (second node)))
-                           node)
-                         (:params outer-node))
-                        (walk/prewalk
-                         (fn [node]
-                           (when (and (symbol? node)
-                                      (not (@local-symbols node)))
-                             (println node (resolve node))
-                             (register node))
-                           node)
-                         (:body outer-node))))
-                    outer-node)
-                  form)
+                       (swap! missing-dependencies conj [var-ns var-name x]))))
+        data (or (get-in form [:defn-args :fn-tail])
+                 (get-in form [:form-data :init-expr]))]
+    (let [local-symbols (atom #{})]
+      (walk/prewalk
+       (fn [node]
+         (when (and (vector? node)
+                    (= :local-symbol (first node)))
+           (swap! local-symbols conj (second node)))
+         ;; a named anonymous fn
+         (when (and (map? node)
+                    (:fn-name node)
+                    (symbol? (:fn-name node)))
+           (swap! local-symbols conj (:fn-name node)))
+         node)
+       data)
+      (walk/prewalk
+       (fn [node]
+         (when (and (symbol? node)
+                    (not= '& node)
+                    (not (clojure.string/ends-with? (str node) "#"))
+                    (not (replacement.import2.clojure-core/syms node))
+                    (not (@local-symbols node)))
+           (when (= 'ret node)
+             (println var-name @local-symbols))
+           (register node))
+         node)
+       data))
+    form
     (-> registry
         (update :missing-dependencies into @missing-dependencies)
         (assoc-in [current-ns-name :vars var-name ::data/dependencies]
