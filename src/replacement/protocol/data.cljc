@@ -21,6 +21,10 @@
          #(or (= 'defn %)
               (= 'defn- %))))
 
+(s/def ::fn-sym
+  (s/and symbol?
+         #(= 'fn %)))
+
 (s/def ::defmacro-sym
   (s/and symbol?
          #(= 'defmacro %)))
@@ -28,6 +32,34 @@
 (s/def ::ns-sym
   (s/and symbol?
          #(= 'ns %)))
+
+(s/def ::loop-sym
+  (s/and symbol?
+         #(= 'loop %)))
+
+(s/def ::with-open-sym
+  (s/and symbol?
+         #(= 'with-open %)))
+
+(s/def ::let-sym
+  (s/and symbol?
+         #(= 'let %)))
+
+(s/def ::if-let-sym
+  (s/and symbol?
+         #(= 'if-let %)))
+
+(s/def ::when-let-sym
+  (s/and symbol?
+         #(= 'when-let %)))
+
+(s/def ::when-some-sym
+  (s/and symbol?
+         #(= 'when-some %)))
+
+(s/def ::if-some-sym
+  (s/and symbol?
+         #(= 'if-some %)))
 
 (s/def ::minimal-string
   (s/and string? #(not (string/blank? %))))
@@ -41,22 +73,122 @@
         :def ::def-sym
         :defn ::defn-sym
         :defmacro :defmacro-sym
+        :let ::let-sym
+        :with-open ::with-open-sym
+        :loop ::loop-sym
+        :if-let ::if-let-sym
+        :when-let ::when-let-sym
+        :if-some ::if-some-sym
+        :when-some ::when-some-sym
         :other symbol?))
+
+(s/def ::binding-form
+  (s/or :local-symbol ::core-specs/local-name
+        :seq-destructure ::seq-binding-form
+        :map-destructure ::core-specs/map-binding-form))
+
+(s/def ::seq-binding-form
+  (s/and vector?
+         (s/conformer identity vec)
+         (s/cat :elems (s/* ::binding-form)
+                :rest (s/? (s/cat :amp #{'&} :form ::binding-form))
+                :as (s/? (s/cat :as #{:as} :sym ::core-specs/local-name)))))
+
+(defn even-number-of-forms?
+  "Returns true if there are an even number of forms in a binding vector"
+  [forms]
+  (even? (count forms)))
+
+(s/def ::binding (s/cat :form ::core-specs/binding-form :init-expr ::form))
+(s/def ::bindings (s/and vector?
+                         even-number-of-forms?
+                         (s/conformer identity vec)
+                         (s/* ::binding)))
+
+(s/def ::loop-form
+  (s/cat
+   :loop ::loop-sym
+   :loop-args (s/cat :bindings ::bindings
+                     :body (s/* ::form))))
+
+(s/def ::with-open-form
+  (s/cat
+   :with-open ::with-open-sym
+   :with-open-args (s/cat :bindings ::bindings
+                          :body (s/* ::form))))
+
+(s/def ::let-form
+  (s/cat
+   :let ::let-sym
+   :let-args (s/cat :bindings ::bindings
+                    :body (s/* ::form))))
+
+(s/def ::if-let-form
+  (s/cat
+   :if-let ::if-let-sym
+   :if-let-args (s/cat
+                 :bindings (s/and vector? ::binding)
+                 :then ::form
+                 :else (s/? ::form))))
+
+(s/def ::when-let-form
+  (s/cat :when-let ::when-let-sym
+         :when-let-args (s/cat :bindings (s/and vector? ::binding)
+                               :body (s/* ::form))))
+
+(s/def ::if-some-form
+  (s/cat
+   :if-some ::if-some-sym
+   :if-some-args (s/cat
+                  :bindings (s/and vector? ::binding)
+                  :then ::form
+                  :else (s/? ::form))))
+
+(s/def ::when-some-form
+  (s/cat :when-some ::when-some-sym
+         :when-some-args (s/cat :bindings (s/and vector? ::binding)
+                                :body (s/* ::form))))
 
 (s/def ::ns-form
   (s/cat
-    :ns ::ns-sym
-    :ns-args ::core-specs/ns-form))
+   :ns ::ns-sym
+   :ns-args ::core-specs/ns-form))
 
+(s/def ::params+body
+  (s/cat :params ::core-specs/param-list
+         :body (s/alt :prepost+body (s/cat :prepost map?
+                                           :body (s/+ ::form))
+                      :body (s/* ::form))))
+
+(s/def ::defn-args
+  (s/cat :fn-name simple-symbol?
+         :docstring (s/? string?)
+         :meta (s/? map?)
+         :fn-tail (s/alt :arity-1 ::params+body
+                         :arity-n (s/cat :bodies (s/+ (s/spec ::params+body))
+                                         :attr-map (s/? map?)))))
+
+(s/def ::fn-args
+  (s/cat :fn-name (s/? simple-symbol?)
+         :docstring (s/? string?)
+         :meta (s/? map?)
+         :fn-tail (s/alt :arity-1 ::params+body
+                         :arity-n (s/cat :bodies (s/+ (s/spec ::params+body))
+                                         :attr-map (s/? map?)))))
 (s/def ::defn-form
   (s/cat
    :defn-type ::defn-sym
-   :defn-args ::core-specs/defn-args))
+   :defn-args ::defn-args))
+
+(s/def ::fn-form
+  (s/cat
+   :defn-type ::fn-sym
+   :defn-args ::fn-args))
 
 (s/def ::defmacro-form
   (s/cat
    :defn-type ::defmacro-sym
-   :defn-args ::core-specs/defn-args))
+   :defn-args ::defn-args))
 
 (s/def ::def-form
   (s/cat
@@ -65,12 +197,23 @@
    :docstring (s/? string?)
    :init-expr (s/+ any?)))
 
+
 (s/def ::form
   (s/or :ns ::ns-form
         :def ::def-form
         :defn ::defn-form
+        :fn ::fn-form
         :defmacro ::defmacro-form
-        :expr list?))
+        :loop ::loop-form
+        :with-open ::with-open-form
+        :let ::let-form
+        :if-let ::if-let-form
+        :when-let-form ::when-let-form
+        :if-some ::if-some-form
+        :when-some-form ::when-some-form
+        :expr (s/+ (s/spec ::form))
+        #_#_:fn-call list?
+        :any any?))
 
 (s/def ::text ::minimal-string)
 
