@@ -2,7 +2,20 @@
 
 
 (def syms
-  #{'sym
+  #{'minus
+    'letfn*
+    'finally
+    'case*
+    'try
+    'catch
+    'size
+    'reload
+    'shift
+    'new
+    'somef
+    'toString
+    'cancel
+    'sym
     'quote
     'throw
     'if
