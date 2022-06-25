@@ -41,6 +41,18 @@
   (s/and symbol?
          #(= 'loop %)))
 
+(s/def ::dotimes-sym
+  (s/and symbol?
+         #(= 'dotimes %)))
+
+(s/def ::doseq-sym
+  (s/and symbol?
+         #(= 'doseq %)))
+
+(s/def ::for-sym
+  (s/and symbol?
+         #(= 'for %)))
+
 (s/def ::with-open-sym
   (s/and symbol?
          #(= 'with-open %)))
@@ -81,6 +93,9 @@
         :let ::let-sym
         :with-open ::with-open-sym
         :loop ::loop-sym
+        :dotimes ::dotimes-sym
+        :for ::for-sym
+        :doseq ::doseq-sym
         :if-let ::if-let-sym
         :when-let ::when-let-sym
         :if-some ::if-some-sym
@@ -115,6 +130,24 @@
    :loop ::loop-sym
    :loop-args (s/cat :bindings ::bindings
                      :body (s/* ::form))))
+
+(s/def ::dotimes-form
+  (s/cat
+   :dotimes ::dotimes-sym
+   :dotimes-args (s/cat :bindings ::bindings
+                        :body (s/* ::form))))
+
+(s/def ::for-form
+  (s/cat
+   :for ::for-sym
+   :for-args (s/cat :bindings ::bindings
+                    :body (s/* ::form))))
+
+(s/def ::doseq-form
+  (s/cat
+   :doseq ::doseq-sym
+   :doseq-args (s/cat :bindings ::bindings
+                      :body (s/* ::form))))
 
 (s/def ::with-open-form
   (s/cat
@@ -230,6 +263,9 @@
         :fn ::fn-form
         :defmacro ::defmacro-form
         :loop ::loop-form
+        :dotimes ::dotimes-form
+        :for ::for-form
+        :doseq ::doseq-form
         :with-open ::with-open-form
         :let ::let-form
         :if-let ::if-let-form
