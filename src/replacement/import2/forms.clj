@@ -1,10 +1,8 @@
 (ns replacement.import2.forms
-  (:require [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]
+  (:require [clojure.string :as string]
             [clojure.walk :as walk]
-            [replacement.protocol.data :as data]
-            [clojure.zip :as z]
-            [replacement.import2.clojure-core :as cc]))
+            [replacement.import2.clojure-core :as cc]
+            [replacement.protocol.data :as data]))
 
 (defn register-dependencies
   "Analyze the form for dependencies"
@@ -56,11 +54,11 @@
        (fn [node]
          (when (and (symbol? node)
                     (not= '& node)
-                    (not (clojure.string/ends-with? (str node) "#"))
-                    (not (clojure.string/ends-with? (str node) "."))
-                    (not (clojure.string/starts-with? (str node) "."))
-                    (not (clojure.string/starts-with? (str node) "clojure"))
-                    (not (clojure.string/ends-with? (str node) "__auto__"))
+                    (not (string/ends-with? (str node) "#"))
+                    (not (string/ends-with? (str node) "."))
+                    (not (string/starts-with? (str node) "."))
+                    (not (string/starts-with? (str node) "clojure"))
+                    (not (string/ends-with? (str node) "__auto__"))
                     (not (cc/syms node))
                     (not (cc/special-forms node))
                     (not (@local-symbols node)))
@@ -75,16 +73,6 @@
                   (disj @dependencies var-name)))))
 
 (set! *warn-on-reflection* true)
-
-(comment
-  "Check all calls"
-  (stest/instrument))
-
-(s/def ::form-event-data
-  (s/keys :req [::data/id ::data/type ::data/var-name ::data/ns-name ::data/form-data]))
-;; Stronger spec:
-;; the ::data/name spec should ensure that is matches the name in the conformed form
-;; or vice-versa
 
 (defmulti register-form (fn [_registry [form-type _]] form-type))
 
@@ -140,15 +128,3 @@
            ::data/var-name  'unsupported
            ::data/type      'unsupported
            ::data/form-data data}))
-
-
-(comment (-> (z/seq-zip
-              '(defn rand
-                 "Returns a random floating point number between 0 (inclusive) and
-  n (default 1) (exclusive)."
-        {:added "1.0"
-         :static true}
-        ([] (. Math (random)))
-        ([n] (* n (rand)))))
-    z/down z/right z/right
-    z/right z/right z/down z/right))
