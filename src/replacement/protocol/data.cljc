@@ -249,10 +249,10 @@
    :classname symbol?
    :method+args (s/alt :method symbol?
                        :method+args (s/cat :method symbol?
-                                           :args* (s/* any?))
+                                           :args* (s/* ::form))
                        :method+args-sexp (s/or :method symbol?
                                                :method+args (s/cat :method symbol?
-                                                                   :args* (s/* any?))))
+                                                                   :args* (s/* ::form))))
    ))
 
 (s/def ::form
