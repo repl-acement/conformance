@@ -6,7 +6,9 @@
             [clojure.zip :as z]
             [replacement.import2.clojure-core :as cc]))
 
-(defn register-dependencies [{:keys [current-ns-name] :as registry} var-name form]
+(defn register-dependencies
+  "Analyze the form for dependencies"
+  [{:keys [current-ns-name] :as registry} var-name form]
   (let [dependencies (atom #{})
         missing-dependencies (atom #{})
         register (fn [x]
@@ -18,6 +20,12 @@
                        (swap! missing-dependencies conj [var-ns var-name x]))))
         data (or (get-in form [:defn-args :fn-tail])
                  (get-in form [:form-data :init-expr]))]
+    ;;NOTE: this very naive an wrongly assigns the scope of a local symbol
+    ;; to the whole var.
+    ;;WARNING: it may ignore a dependency if a local binding is shadowing
+    ;; a var that is also used within the form outside of the local binding
+    ;;TODO: maybe use zipers to better control the navigation within the
+    ;; form and keep an accurate local scope
     (let [local-symbols (atom #{})]
       (walk/prewalk
        (fn [node]
@@ -56,8 +64,6 @@
                     (not (cc/syms node))
                     (not (cc/special-forms node))
                     (not (@local-symbols node)))
-           (when (= 'ret node)
-             (println var-name @local-symbols))
            (register node))
          node)
        data))
