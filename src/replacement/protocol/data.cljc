@@ -16,6 +16,10 @@
   (s/and symbol?
          #(= 'def %)))
 
+(s/def ::reify-sym
+  (s/and symbol?
+         #(= 'reify %)))
+
 (s/def ::defn-sym
   (s/and symbol?
          #(or (= 'defn %)
@@ -90,6 +94,7 @@
         :def ::def-sym
         :defn ::defn-sym
         :defmacro :defmacro-sym
+        :reify :reify-sym
         :let ::let-sym
         :with-open ::with-open-sym
         :loop ::loop-sym
@@ -235,6 +240,16 @@
    :docstring (s/? string?)
    :init-expr (s/+ any?)))
 
+(s/def ::protocol-impl
+  (s/cat :method symbol?
+         :args ::core-specs/param-list
+         :bodies (s/* ::form)))
+
+(s/def ::reify-form
+  (s/cat :reify ::reify-sym
+         :reify-args (s/+ (s/cat :protocol symbol?
+                                 :impl (s/and list? ::protocol-impl)))))
+
 ;; [ ] (. instance-expr member-symbol)
 ;; [x] (. Classname-symbol member-symbol)
 ;; [ ] (. instance-expr -field-symbol)
@@ -261,6 +276,7 @@
         :defn ::defn-form
         :dot-form ::dot-form
         :fn ::fn-form
+        :reify ::reify-form
         :defmacro ::defmacro-form
         :loop ::loop-form
         :dotimes ::dotimes-form
