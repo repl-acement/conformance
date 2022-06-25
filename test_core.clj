@@ -8012,14 +8012,14 @@ fails, attempts to require sym's namespace and retries."
   are mapped to result of applying f to the corresponding values of m."
   {:added "1.11"}
   [m f]
-  `(with-meta
-     (persistent!
-      (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
-                 (if (instance? clojure.lang.IEditableCollection m)
-                   (transient m)
-                   (transient {}))
-                 m))
-     (meta m)))
+  (with-meta
+    (persistent!
+     (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
+                (if (instance? clojure.lang.IEditableCollection m)
+                  (transient m)
+                  (transient {}))
+                m))
+    (meta m)))
 
 (defn update-keys
   "m f => {(f k) v ...}

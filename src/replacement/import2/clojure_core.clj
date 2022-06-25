@@ -2,7 +2,8 @@
 
 
 (def syms
-  #{'minus
+  #{'do
+    'minus
     'letfn*
     'finally
     'case*
