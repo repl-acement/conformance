@@ -3302,14 +3302,14 @@
   {:added "1.0"
    :static true}
   [timeout-ms & agents]
-    (io! "await-for in transaction"
-     (when *agent*
-       (throw (new Exception "Can't await in agent action")))
-     (let [latch (new java.util.concurrent.CountDownLatch (count agents))
-           count-down (fn [agent] (. latch (countDown)) agent)]
-       (doseq [agent agents]
+  (io! "await-for in transaction"
+       (when *agent*
+         (throw (new Exception "Can't await in agent action")))
+       (let [latch (new java.util.concurrent.CountDownLatch (count agents))
+             count-down (fn [agent] (. latch (countDown)) agent)]
+         (doseq [agent agents]
            (send agent count-down))
-       (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS))))))
+         (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS))))))
 
 (defmacro dotimes
   "bindings => name n

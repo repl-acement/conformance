@@ -41,6 +41,10 @@
                     (:method node)
                     (symbol? (:method node)))
            (swap! local-symbols conj (:method node)))
+         (when (and (vector? node)
+                    (= :method (first node))
+                    (symbol? (second node)))
+           (swap! local-symbols conj (second node)))
 
          ;; map destructuring
          (when (and (vector? node)
@@ -52,6 +56,7 @@
        data)
       (walk/prewalk
        (fn [node]
+         ;;NOTE: a bunch of hacks to weed out the undesirable vars
          (when (and (symbol? node)
                     (not= '& node)
                     (not (string/ends-with? (str node) "#"))
@@ -61,7 +66,10 @@
                     (not (string/ends-with? (str node) "__auto__"))
                     (not (cc/syms node))
                     (not (cc/special-forms node))
-                    (not (@local-symbols node)))
+                    (not (@local-symbols node))
+                    ;; probably the ugliest hack of them all, to get
+                    ;; rid of java classes
+                    (not (= java.lang.Class (type (resolve node)))))
            (register node))
          node)
        data))
