@@ -27,13 +27,17 @@
 (defn form->spec-formed
   "Obtain the conformed and unformed versions of the given form or explain-data for its non-conformance."
   [form]
-  (let [pre-check (s/valid? ::spec-data/form form)
-        conformed (and pre-check (s/conform ::spec-data/form form))]
-    (cond-> {}
-            pre-check (assoc :form form
-                             :conformed conformed
-                             :unformed (s/unform ::spec-data/form conformed))
-            (not pre-check) (assoc :explain (s/explain-data ::spec-data/form form)))))
+  (try
+    (let [pre-check (s/valid? ::spec-data/form form)
+          conformed (and pre-check (s/conform ::spec-data/form form))]
+      (cond-> {}
+        pre-check (assoc :form form
+                         :conformed conformed
+                         :unformed (s/unform ::spec-data/form conformed))
+        (not pre-check) (assoc :explain (s/explain-data ::spec-data/form form))))
+    (catch Exception e
+      (println form)
+      (throw e))))
 
 (defn whole-ns->spec-form-data
   "Produce a list of maps with conformed and unformed versions or explain-data for the given forms."

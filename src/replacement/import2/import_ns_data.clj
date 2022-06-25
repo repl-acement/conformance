@@ -90,4 +90,6 @@
                                         ;"Elapsed time: 115.144397 msecs"
                                         ;=> #:xtdb.api{:tx-id 3182, :tx-time #inst"2022-06-19T21:57:22.972-00:00"}
 
+  ;; NOTE(eric): this is the repl line I'm currently using to test my changes, returns triples of [ns var missing-var]
+  (:missing-dependencies (import-new-ns xt-db/xtdb-node (slurp "test_core.clj")))
   )

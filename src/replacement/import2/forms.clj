@@ -29,6 +29,11 @@
                     (:fn-name node)
                     (symbol? (:fn-name node)))
            (swap! local-symbols conj (:fn-name node)))
+
+         (when (and (map? node)
+                    (:method node)
+                    (symbol? (:method node)))
+           (swap! local-symbols conj (:method node)))
          node)
        data)
       (walk/prewalk

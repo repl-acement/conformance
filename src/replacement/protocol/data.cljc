@@ -33,6 +33,10 @@
   (s/and symbol?
          #(= 'ns %)))
 
+(s/def ::dot-sym
+  (s/and symbol?
+         #(= '. %)))
+
 (s/def ::loop-sym
   (s/and symbol?
          #(= 'loop %)))
@@ -70,6 +74,7 @@
 
 (s/def ::type
   (s/or :ns ::ns-sym
+        :dot ::dot-sym
         :def ::def-sym
         :defn ::defn-sym
         :defmacro :defmacro-sym
@@ -197,10 +202,31 @@
    :docstring (s/? string?)
    :init-expr (s/+ any?)))
 
+;; [ ] (. instance-expr member-symbol)
+;; [x] (. Classname-symbol member-symbol)
+;; [ ] (. instance-expr -field-symbol)
+;; [ ] (. instance-expr (method-symbol args*))
+;; [ ] (. instance-expr method-symbol args*)
+;; [x] (. Classname-symbol (method-symbol args*))
+;; [x] (. Classname-symbol method-symbol args*)
+
+(s/def ::dot-form
+  (s/cat
+   :dot ::dot-sym
+   :classname symbol?
+   :method+args (s/alt :method symbol?
+                       :method+args (s/cat :method symbol?
+                                           :args* (s/* any?))
+                       :method+args-sexp (s/or :method symbol?
+                                               :method+args (s/cat :method symbol?
+                                                                   :args* (s/* any?))))
+   ))
+
 (s/def ::form
   (s/or :ns ::ns-form
         :def ::def-form
         :defn ::defn-form
+        :dot-form ::dot-form
         :fn ::fn-form
         :defmacro ::defmacro-form
         :loop ::loop-form
