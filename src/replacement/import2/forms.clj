@@ -4,7 +4,7 @@
             [clojure.walk :as walk]
             [replacement.protocol.data :as data]
             [clojure.zip :as z]
-            [replacement.import2.clojure-core]))
+            [replacement.import2.clojure-core :as cc]))
 
 (defn register-dependencies [{:keys [current-ns-name] :as registry} var-name form]
   (let [dependencies (atom #{})
@@ -53,7 +53,8 @@
                     (not (clojure.string/starts-with? (str node) "."))
                     (not (clojure.string/starts-with? (str node) "clojure"))
                     (not (clojure.string/ends-with? (str node) "__auto__"))
-                    (not (replacement.import2.clojure-core/syms node))
+                    (not (cc/syms node))
+                    (not (cc/special-forms node))
                     (not (@local-symbols node)))
            (when (= 'ret node)
              (println var-name @local-symbols))
