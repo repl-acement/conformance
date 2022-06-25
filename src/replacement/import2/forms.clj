@@ -2,7 +2,9 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [clojure.walk :as walk]
-            [replacement.protocol.data :as data]))
+            [replacement.protocol.data :as data]
+            [clojure.zip :as z]
+            [replacement.import2.clojure-core]))
 
 (defn register-dependencies [{:keys [current-ns-name] :as registry} var-name form]
   (let [dependencies (atom #{})
@@ -118,3 +120,15 @@
            ::data/var-name  'unsupported
            ::data/type      'unsupported
            ::data/form-data data}))
+
+
+(comment (-> (z/seq-zip
+              '(defn rand
+                 "Returns a random floating point number between 0 (inclusive) and
+  n (default 1) (exclusive)."
+        {:added "1.0"
+         :static true}
+        ([] (. Math (random)))
+        ([n] (* n (rand)))))
+    z/down z/right z/right
+    z/right z/right z/down z/right))

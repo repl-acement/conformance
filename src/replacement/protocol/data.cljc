@@ -197,7 +197,6 @@
    :docstring (s/? string?)
    :init-expr (s/+ any?)))
 
-
 (s/def ::form
   (s/or :ns ::ns-form
         :def ::def-form
@@ -211,8 +210,7 @@
         :when-let-form ::when-let-form
         :if-some ::if-some-form
         :when-some-form ::when-some-form
-        :expr (s/+ (s/spec ::form))
-        #_#_:fn-call list?
+        :expr (s/+ ::form)
         :any any?))
 
 (s/def ::text ::minimal-string)
