@@ -30,10 +30,18 @@
                     (symbol? (:fn-name node)))
            (swap! local-symbols conj (:fn-name node)))
 
+         ;; dot forms
          (when (and (map? node)
                     (:method node)
                     (symbol? (:method node)))
            (swap! local-symbols conj (:method node)))
+
+         ;; map destructuring
+         (when (and (vector? node)
+                    (= :map-destructure (first node)))
+           (let [destructured-keys (:keys (second node))]
+             (mapv #(swap! local-symbols conj %)
+                   destructured-keys)))
          node)
        data)
       (walk/prewalk
