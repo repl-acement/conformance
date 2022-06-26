@@ -3,6 +3,7 @@
             #?(:clj  [clojure.core.specs.alpha :as core-specs]
                :cljs [replacement.protocol.cljs-fn-specs :as core-specs])
             [clojure.spec.test.alpha :as stest]
+            [clojure.set :as set]
             [clojure.string :as string]
             [replacement.protocol.patched-core-specs]))
 
@@ -263,16 +264,24 @@
                            :flag #{:reload :reload-all :verbose}))))
 
 (s/def ::java-call
-  (s/cat :method (s/and symbol?
-                        #(some-> (namespace %) (string/starts-with? "java."))
-                        #(class? (some-> (namespace %)
-                                         symbol
-                                         resolve)))
-         :args (s/* any?)))
+  (s/and list?
+         (s/cat :method (s/and symbol?
+                               ;; need a better discriminator cos this gets called too much
+                               #(class? (some-> (namespace %)
+                                                symbol
+                                                resolve)))
+                :args (s/* any?))))
 
 (s/def ::java-class (s/and symbol?
-                           #(some-> (name %) (string/starts-with? "java."))
                            #(class? %)))
+
+(def primitives-string-names
+  (set/map-invert primitives-classnames))
+
+(s/def ::java-type (s/and symbol?
+                          #(primitives-string-names (str %))))
+
+;(s/def ::java-value #(type %))
 
 ;; [ ] (. instance-expr member-symbol)
 ;; [x] (. Classname-symbol member-symbol)
@@ -302,8 +311,9 @@
         :fn ::fn-form
         :reify ::reify-form
         :require ::require-form
-        :java-class ::java-class
         :java-call ::java-call
+        :java-class ::java-class
+        :java-type ::java-type
         :defmacro ::defmacro-form
         :loop ::loop-form
         :dotimes ::dotimes-form
