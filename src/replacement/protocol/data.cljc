@@ -14,77 +14,58 @@
 (s/def ::id uuid?)
 
 (s/def ::def-sym
-  (s/and symbol?
-         #(= 'def %)))
+  (s/and symbol? #{'def}))
 
 (s/def ::reify-sym
-  (s/and symbol?
-         #(= 'reify %)))
+  (s/and symbol? #{'reify}))
 
 (s/def ::defn-sym
-  (s/and symbol?
-         #(or (= 'defn %)
-              (= 'defn- %))))
+  (s/and symbol? #{'defn 'defn-}))
 
 (s/def ::fn-sym
-  (s/and symbol?
-         #(= 'fn %)))
+  (s/and symbol? #{'fn}))
 
 (s/def ::defmacro-sym
-  (s/and symbol?
-         #(= 'defmacro %)))
+  (s/and symbol? #{'defmacro}))
 
 (s/def ::ns-sym
-  (s/and symbol?
-         #(= 'ns %)))
+  (s/and symbol? #{'ns}))
 
 (s/def ::dot-sym
-  (s/and symbol?
-         #(= '. %)))
+  (s/and symbol? #{'.}))
 
 (s/def ::loop-sym
-  (s/and symbol?
-         #(= 'loop %)))
+  (s/and symbol? #{'loop}))
 
 (s/def ::dotimes-sym
-  (s/and symbol?
-         #(= 'dotimes %)))
+  (s/and symbol? #{'dotimes}))
 
 (s/def ::doseq-sym
-  (s/and symbol?
-         #(= 'doseq %)))
+  (s/and symbol? #{'doseq}))
 
 (s/def ::for-sym
-  (s/and symbol?
-         #(= 'for %)))
+  (s/and symbol? #{'for}))
 
 (s/def ::with-open-sym
-  (s/and symbol?
-         #(= 'with-open %)))
+  (s/and symbol? #{'with-open}))
 
 (s/def ::let-sym
-  (s/and symbol?
-         #(= 'let %)))
+  (s/and symbol? #{'let}))
 
 (s/def ::if-let-sym
-  (s/and symbol?
-         #(= 'if-let %)))
+  (s/and symbol? #{'if-let}))
 
 (s/def ::when-let-sym
-  (s/and symbol?
-         #(= 'when-let %)))
+  (s/and symbol? #{'when-let}))
 
 (s/def ::when-some-sym
-  (s/and symbol?
-         #(= 'when-some %)))
+  (s/and symbol? #{'when-some}))
 
 (s/def ::if-some-sym
-  (s/and symbol?
-         #(= 'if-some %)))
+  (s/and symbol? #{'if-some}))
 
 (s/def ::require-sym
-  (s/and symbol?
-         #(= 'require %)))
+  (s/and symbol? #{'require}))
 
 
 (s/def ::minimal-string
@@ -272,16 +253,30 @@
                                                 resolve)))
                 :args (s/* any?))))
 
-(s/def ::java-class (s/and symbol?
-                           #(class? %)))
+(s/def ::java-class
+  (s/and symbol?
+         #(class? %)))
 
 (def primitives-string-names
   (set/map-invert primitives-classnames))
 
-(s/def ::java-type (s/and symbol?
-                          #(primitives-string-names (str %))))
+(s/def ::java-type
+  (s/and symbol?
+         #(primitives-string-names (str %))))
 
-;(s/def ::java-value #(type %))
+(def java-primitive-classes
+  #{"Float"
+    "Integer"
+    "Long"
+    "Boolean"
+    "Character"
+    "Double"
+    "Byte"
+    "Short"})
+
+(s/def ::java-value
+  (s/and symbol?
+         #(some-> % namespace java-primitive-classes)))
 
 ;; [ ] (. instance-expr member-symbol)
 ;; [x] (. Classname-symbol member-symbol)
@@ -314,6 +309,7 @@
         :java-call ::java-call
         :java-class ::java-class
         :java-type ::java-type
+        :java-value ::java-value
         :defmacro ::defmacro-form
         :loop ::loop-form
         :dotimes ::dotimes-form
