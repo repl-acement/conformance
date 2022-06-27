@@ -8,7 +8,7 @@
   "Evaluates body with *read-eval* set to a \"known\" value,
    i.e. substituting true for :unknown if necessary."
   [& body]
-  `(binding [*read-eval* (if (= :unknown *read-eval*) true *read-eval*)]
+  `(binding [*read-eval* false #_(if (= :unknown *read-eval*) true *read-eval*)]
      ~@body))
 
 (defn text->edn-forms
@@ -27,13 +27,17 @@
 (defn form->spec-formed
   "Obtain the conformed and unformed versions of the given form or explain-data for its non-conformance."
   [form]
-  (let [pre-check (s/valid? ::spec-data/form form)
-        conformed (and pre-check (s/conform ::spec-data/form form))]
-    (cond-> {}
-            pre-check (assoc :form form
-                             :conformed conformed
-                             :unformed (s/unform ::spec-data/form conformed))
-            (not pre-check) (assoc :explain (s/explain-data ::spec-data/form form)))))
+  (try
+    (let [pre-check (s/valid? ::spec-data/form form)
+          conformed (and pre-check (s/conform ::spec-data/form form))]
+      (cond-> {}
+        pre-check (assoc :form form
+                         :conformed conformed
+                         :unformed (s/unform ::spec-data/form conformed))
+        (not pre-check) (assoc :explain (s/explain-data ::spec-data/form form))))
+    (catch Exception e
+      (println form)
+      (throw e))))
 
 (defn whole-ns->spec-form-data
   "Produce a list of maps with conformed and unformed versions or explain-data for the given forms."
@@ -87,7 +91,9 @@
 (defn hello-world
   \"Welcome to repl-acement\"
   []
-  \"Hello world\")
+  (let [a \"hello\"
+        b \"world\"])
+  (str a \" \" b))
 
 (defn greeting
   \"Have more interesting ways to greet\"
@@ -96,7 +102,7 @@
   (greeting \"you\"))
   ([name]
   {:pre [(string? name)]}
-  (str \"Hello\" name))
+  (str \"Hello\" name (hello-world)))
   {:multi-arity-meta :valid-but-rarely-used})")
 
 (def goodbye-sample "(ns replacement.goodbye
