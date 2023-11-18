@@ -9,14 +9,12 @@
   This namespace is concerned with breaking the defn forms down using `spec/conform` and
   putting them back together with `unform`.
 
-  Editing by a human or a function may happen in between providing that it remains `unform`-able.
-  This can be relaxed for input from humans but should not be relaxed for data from functions."
+  Edits may happen in between providing that it remains `unform`-able."
   (:require
     [clojure.data :as data]
     [clojure.spec.alpha :as s]
     [clojure.walk :as walk]
-    #?(:clj  [clojure.core.specs.alpha :as specs]
-       :cljs [replacement.protocol.cljs-fn-specs :as specs])
+    [clojure.core.specs.alpha :as specs]
     [replacement.protocol.patched-core-specs :as core-specs]
     [replacement.protocol.data :as data-specs]
     [replacement.import.state :as state]

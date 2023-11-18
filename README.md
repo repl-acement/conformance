@@ -30,15 +30,15 @@ The flow is like this:
 
 ```mermaid
 graph TD
-    A[Text Source]-->|Text| B(Save);
-    B --> C{Replacement};
-    C -->|Text| D(fa:fa-book-open read);
-    D -->|EDN Clojure code| E(fa:fa-check conform);
-    E -->|EDN data| F[fa:fa-hashtag digest];
-    F -->|EDN data| I[fa:fa-database store];
-    E -->|EDN data| G(fa:fa-recycle unform);
-    G -->|EDN Clojure code| H(fa:fa-pen print);
-    H -->|Text| C;
+    A[Text Source]-->|Text| B(Save)
+    B --> C{Replacement}
+    C -->|Text| D(fa:fa-book-open read)
+    D -->|EDN Clojure code| E(fa:fa-check conform)
+    E -->|EDN data| F[fa:fa-hashtag digest]
+    F -->|EDN data| I[fa:fa-database store]
+    E -->|EDN data| G(fa:fa-recycle unform)
+    G -->|EDN Clojure code| H(fa:fa-tv print)
+    H -->|Text| C
 ```
 
 **RE**ad **C**onform **U**nform **P**rint aka the RECUPeration workflow

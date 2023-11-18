@@ -1,7 +1,6 @@
 (ns replacement.protocol.data
   (:require [clojure.spec.alpha :as s]
-            #?(:clj  [clojure.core.specs.alpha :as core-specs]
-               :cljs [replacement.protocol.cljs-fn-specs :as core-specs])
+            [clojure.core.specs.alpha :as core-specs]
             [clojure.spec.test.alpha :as stest]
             [clojure.set :as set]
             [clojure.string :as string]
@@ -295,8 +294,7 @@
                                             :args* (s/* ::form))
                         :method+args-sexp (s/or :method symbol?
                                                 :method+args (s/cat :method symbol?
-                                                                    :args* (s/* ::form))))
-    ))
+                                                                    :args* (s/* ::form))))))
 
 (s/def ::form
   (s/or :ns ::ns-form

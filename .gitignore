@@ -16,4 +16,4 @@ pom.xml.asc
 .lsp/
 data/
 /conformance.iml
-/.idea/
+.idea/

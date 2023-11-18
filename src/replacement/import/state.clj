@@ -1,6 +1,5 @@
 (ns replacement.import.state
-  (:require [replacement.import.hashing :as hashing]
-            #?(:cljs [promesa.core :as p])))
+  (:require [replacement.import.hashing :as hashing]))
 
 (defn record-state-change
   "Add updated-item to the current state under the change-id key.
@@ -13,9 +12,7 @@
 
 (defn update-state
   [state updated-item distinction-key form-id]
-  (let [digest-input (get updated-item distinction-key)]
-    #?(:clj  (let [digest (hashing/digest digest-input)]
-               (record-state-change state updated-item (keyword form-id digest)))
-       :cljs (p/let [digest (hashing/digest digest-input)]
-               (record-state-change state updated-item (keyword form-id digest))))))
+  (let [digest-input (get updated-item distinction-key)
+        digest (hashing/digest digest-input)]
+    (record-state-change state updated-item (keyword form-id digest))))
 
