@@ -10,47 +10,51 @@
   (stest/instrument))
 
 (s/def ::form-event-data
-  (s/keys :req [::data/id ::data/type ::data/var-name ::data/ns-name ::data/form-data]))
-;; Stronger spec:
-;; the ::data/name spec should ensure that is matches the name in the conformed form
-;; or vice-versa
+  (s/keys :req [::data/id
+                ::data/type
+                ::data/var-name
+                ::data/ns-name
+                ::data/form-data]))
 
-(defn ns-reference-data
-  [ns-name [type {:keys [ns-args] :as data}]]
+;; Stronger spec:
+;; the spec should ensure that the ::data/var-name matches the
+;; name in the conformed form or vice-versa
+;; (use fmap or bind ... probably fmap)
+
+;; WIP - these methods take conformed data
+;; they each have different keys to get the var name
+;; - how can we normalize such that multi-method
+;; dispatch is possible?
+(defmulti conformed-type
+  (fn [ns-name data]
+    ;; what to do?
+    ;; just one map?
+    ))
+
+(defmethod conformed-type ::ns
+  [ns-name {:keys [ns-args] :as data}]
   {::data/ns-name   ns-name
    ::data/var-name  (:ns-name ns-args)
-   ::data/type      type
+   ::data/type      ::ns
    ::data/form-data data})
 
-(defn def-reference-data
-  [ns-name [type {:keys [var-name] :as data}]]
+(defmethod conformed-type ::def
+  [ns-name {:keys [var-name] :as data}]
   {::data/ns-name   ns-name
    ::data/var-name  var-name
-   ::data/type      type
+   ::data/type      ::def
    ::data/form-data data})
 
-(defn defn-reference-data
-  [ns-name [type {:keys [defn-args] :as data}]]
+(defmethod conformed-type ::defn
+  [ns-name {:keys [defn-args] :as data}]
   {::data/ns-name   ns-name
    ::data/var-name  (:fn-name defn-args)
-   ::data/type      type
+   ::data/type      ::defn
    ::data/form-data data})
 
-(defn unsupported-reference-data
+(defmethod conformed-type :default
   [ns-name data]
   {::data/ns-name   ns-name
    ::data/var-name  'unsupported
    ::data/type      'unsupported
    ::data/form-data data})
-
-;; TODO re-implement as a multimethod
-(def reference-type-data
-  "Table of mechanisms to enrich conformed data per type"
-  {:ns          {:spec   ::data/ns-form
-                 :ref-fn ns-reference-data}
-   :def         {:spec   ::data/def-form
-                 :ref-fn def-reference-data}
-   :defn        {:spec   ::data/defn-form
-                 :ref-fn defn-reference-data}
-   :unsupported {:spec   nil
-                 :ref-fn unsupported-reference-data}})

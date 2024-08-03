@@ -22,7 +22,7 @@
     ;; to the whole var.
     ;;WARNING: it may ignore a dependency if a local binding is shadowing
     ;; a var that is also used within the form outside of the local binding
-    ;;TODO: maybe use zipers to better control the navigation within the
+    ;;TODO: maybe use zippers to better control the navigation within the
     ;; form and keep an accurate local scope
     (let [local-symbols (atom #{})]
       (walk/prewalk
